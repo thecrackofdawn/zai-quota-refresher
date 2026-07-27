@@ -176,6 +176,24 @@ check_python_version() {
     print_info "✅ Python 环境检查通过（无外部依赖）"
 }
 
+# 校验 cron 表达式：去首尾空格后恰好 5 段，每段仅含 0-9 * / - ,
+# 返回 0=合法，1=非法
+cron_expr_valid() {
+    local expr="$1"
+    local trimmed
+    trimmed="$(printf '%s' "$expr" | sed 's/^ *//;s/ *$//')"
+    [ -z "$trimmed" ] && return 1
+    local field_count
+    field_count=$(printf '%s\n' "$trimmed" | awk '{print NF}')
+    [ "$field_count" -eq 5 ] || return 1
+    local i seg
+    for i in 1 2 3 4 5; do
+        seg=$(printf '%s\n' "$trimmed" | awk -v n="$i" '{print $n}')
+        printf '%s' "$seg" | grep -qE '^[0-9*/,-]+$' || return 1
+    done
+    return 0
+}
+
 # 交互式输入 API Key（隐藏输入）
 input_api_key() {
     while true; do
