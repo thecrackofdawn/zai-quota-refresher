@@ -280,22 +280,6 @@ def check_and_refresh(config):
         log_message(f"✅ TOKENS_LIMIT 使用率: {percentage}%，已在5小时窗口期内，无需刷新", config['log_file'])
 
 
-def print_config(config):
-    """打印当前配置"""
-    log_message("=" * 60, config['log_file'])
-    log_message("智谱 GLM Coding Plan 自动刷新工具已启动", config['log_file'])
-    log_message(f"检查间隔: {config['check_interval_minutes']} 分钟", config['log_file'])
-
-    start_h = config['refresh_time_range']['start']['hour']
-    start_m = config['refresh_time_range']['start']['minute']
-    end_h = config['refresh_time_range']['end']['hour']
-    end_m = config['refresh_time_range']['end']['minute']
-
-    log_message(f"刷新策略时间段: {start_h:02d}:{start_m:02d} - {end_h:02d}:{end_m:02d}",
-               config['log_file'])
-    log_message("=" * 60, config['log_file'])
-
-
 def main():
     """主函数 - 单次执行模式，由 cron 调用"""
     # 加载配置
