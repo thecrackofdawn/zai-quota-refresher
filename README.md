@@ -14,9 +14,9 @@
 
 ## 快速开始
 
-### Linux 一键安装（推荐）
+### Linux 一键安装
 
-**方式1：下载后执行（交互式，最兼容）**
+**下载后执行（交互式）**
 
 ```bash
 # 下载脚本
@@ -27,19 +27,10 @@ chmod +x deploy.sh
 ./deploy.sh install
 ```
 
-**方式2：管道执行 + 环境变量（非交互式）**
-
-```bash
-export ZHIPU_API_KEY="your_api_key_here"
-curl -fsSL https://raw.githubusercontent.com/thecrackofdawn/zai-quota-refresher/main/deploy.sh | bash -s install
-```
-
-**注意**: 管道执行模式不支持交互式输入，必须设置 `ZHIPU_API_KEY` 环境变量。
-
 安装过程中会：
 - 从 GitHub 拉取代码到 `~/.zai-quota-refresher`
-- 交互式配置 API Key（或从环境变量读取）
-- 创建 cron 定时任务（默认：工作日 9:00-18:00，每10分钟）
+- 交互式配置 API Key
+- **交互式选择 cron 执行周期**（默认每天 0:00-23:59，每10分钟）
 - 测试执行一次验证配置
 
 ### Windows 使用
@@ -68,9 +59,9 @@ python quota_refresher.py
 
 ### 定时任务配置
 
-默认 cron 任务：工作日 9:00-18:00，每 10 分钟执行一次
+默认 cron 任务：每天 0:00-23:59，每 10 分钟执行一次（`*/10 0-23 * * *`）。安装时可从预设中交互选择，或输入自定义表达式。
 
-如需修改执行时间，使用 `crontab -e` 编辑：
+如需事后修改执行时间，使用 `crontab -e` 编辑：
 
 ```bash
 # 编辑定时任务
