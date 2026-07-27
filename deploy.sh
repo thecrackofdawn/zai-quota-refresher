@@ -194,6 +194,70 @@ cron_expr_valid() {
     return 0
 }
 
+# 菜单选择逻辑：从 stdin 读输入，设全局 SELECTED_CRON_EXPR
+# 非法序号/非法表达式则循环重试。仅处理交互选择，不做 tty 检测。
+_cron_menu_pick() {
+    local presets_expr=(
+        "*/10 0-23 * * *"
+        "*/30 0-23 * * *"
+        "*/10 0-23 * * 1-5"
+        "*/30 9-18 * * 1-5"
+    )
+    local presets_desc=(
+        "每天 0:00-23:59，每10分钟（默认）"
+        "每天 0:00-23:59，每30分钟"
+        "工作日 0:00-23:59，每10分钟"
+        "工作日 9-18点，每30分钟"
+    )
+
+    while true; do
+        echo ""
+        echo "请选择 cron 执行周期："
+        local idx
+        for idx in 0 1 2 3; do
+            printf "  %d) %s   %s\n" "$((idx+1))" "${presets_desc[$idx]}" "${presets_expr[$idx]}"
+        done
+        echo "  5) 自定义（手动输入 cron 表达式）"
+        echo -n "请输入序号 [1]: "
+        local choice
+        read -r choice || true
+        [ -z "$choice" ] && choice=1
+
+        case "$choice" in
+            1|2|3|4)
+                SELECTED_CRON_EXPR="${presets_expr[$((choice-1))]}"
+                return 0
+                ;;
+            5)
+                while true; do
+                    echo "请输入 cron 表达式（5 段：分 时 日 月 周），如 */10 0-23 * * *："
+                    echo -n "cron: "
+                    local custom
+                    read -r custom || true
+                    if cron_expr_valid "$custom"; then
+                        SELECTED_CRON_EXPR="$custom"
+                        return 0
+                    fi
+                    print_warning "格式不合法（需 5 段，仅含 0-9 * / - ,），请重新输入"
+                done
+                ;;
+            *)
+                print_warning "无效序号，请输入 1-5"
+                ;;
+        esac
+    done
+}
+
+# 交互式选择 cron 执行周期，结果写入全局 SELECTED_CRON_EXPR
+# 非交互/管道模式（stdin 非 tty）：直接用默认，不弹菜单
+input_cron_schedule() {
+    if [ ! -t 0 ]; then
+        SELECTED_CRON_EXPR="*/10 0-23 * * *"
+        return
+    fi
+    _cron_menu_pick
+}
+
 # 交互式输入 API Key（隐藏输入）
 input_api_key() {
     while true; do
