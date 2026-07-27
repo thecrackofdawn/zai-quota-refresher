@@ -326,9 +326,13 @@ config_wizard() {
     print_info "========================================"
 
     # 输入 API Key
-    print_info "步骤 1/1: 配置 API Key"
+    print_info "步骤 1/2: 配置 API Key"
     input_api_key
     api_key="$RETURN_VALUE"
+
+    # 选择 cron 执行周期
+    print_info "步骤 2/2: 选择执行周期"
+    input_cron_schedule
 
     # 更新配置文件
     print_info "正在写入配置文件..."
@@ -351,7 +355,7 @@ EOF
     print_info "  配置摘要"
     print_info "========================================"
     print_info "API Key:        ${api_key:0:8}...${api_key: -8}"
-    print_info "执行时间:       9:00-18:00，每10分钟（可在 crontab 中修改）"
+    print_info "执行周期:       $SELECTED_CRON_EXPR（可在 crontab 中修改）"
     print_info "配置文件:       $INSTALL_DIR/config.json"
     print_info "========================================"
     echo ""
@@ -378,10 +382,10 @@ create_cron_job() {
         chmod +x "$INSTALL_DIR/${SCRIPT_NAME}" 2>/dev/null || true
     fi
 
-    print_info "默认配置：工作日 9:00-18:00，每10分钟执行一次"
+    print_info "执行周期: $SELECTED_CRON_EXPR"
 
-    # 创建 cron 任务：周一到周五，9-18点，每10分钟执行
-    local cron_expr="*/10 9-18 * * 1-5"
+    # 使用安装时选择的执行周期（兜底默认全天每10分钟）
+    local cron_expr="${SELECTED_CRON_EXPR:-*/10 0-23 * * *}"
 
     # 创建完整的 cron 命令 - 直接使用 python3 解释器执行，不依赖脚本权限
     local cron_cmd="cd $INSTALL_DIR && $PYTHON_PATH ${SCRIPT_NAME} >> $INSTALL_DIR/cron.log 2>&1"
@@ -405,7 +409,7 @@ create_cron_job() {
     (crontab -l 2>/dev/null; echo "$cron_expr $cron_cmd") | crontab -
 
     print_info "✅ cron 任务创建完成"
-    print_info "定时规则: 工作日 9:00-18:00，每10分钟执行"
+    print_info "定时规则: $cron_expr"
     print_info "Cron表达式: $cron_expr"
     print_info "执行命令: $cron_cmd"
     print_info "日志文件: $INSTALL_DIR/cron.log"
